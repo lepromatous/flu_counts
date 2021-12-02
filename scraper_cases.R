@@ -30,4 +30,5 @@ fluscrape_upd <- function(urlz, xpathz, df, seasonz){
     separate(., col=hosp_ci, into=c("hosp_ci_lower", "hosp_ci_upper")) %>%
     separate(., col=death_ci, into=c("death_ci_lower", "death_ci_upper")) -> df
   df$season <- seasonz
+  return(df)
 }

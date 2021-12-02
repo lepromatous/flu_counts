@@ -2,6 +2,9 @@ library(rvest)
 library(tidyverse)
 library(stringi)
 library(tidyr)
+library(readxl)
+source("/Users/timwiemken/Library/Mobile Documents/com~apple~CloudDocs/Work/Pfizer/flu_counts/scraper_cases.R")
+
 
 ### which seasons?  Need a sequence of the 2 digit start year
 season.start <- seq(10,19) ### 2020-2021 and 2021-2022 are not avaiable yet. 
@@ -69,62 +72,85 @@ test1 %>%
 
 
 
+
+
+
 ###### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
 ### begin 2017-2018, 
 ###### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
+df1718 <- fluscrape_upd(
+        urlz = 'https://www.cdc.gov/flu/about/burden/2017-2018.htm',
+        xpathz = '/html/body/div[6]/main/div[3]/div/div[4]/div[3]/div/div[1]/table/tbody',
+        df = df1718,
+        seasonz = "2017-2018")
+
 
 ###### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
 ###### 2017-2018 complete
+###### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
 
 
 
 ###### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
 ## 2018-2019 Start
 ###### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
-xpath17 <- '/html/body/div[6]/main/div[3]/div/div[4]/div[3]/div/div[1]/table/tbody'
 
-'https://www.cdc.gov/flu/about/burden/2017-2018.htm' %>%
-  read_html(.) %>%
-  html_nodes(xpath = xpath17) %>%
-  html_table() -> df
-df18 <- data.frame(matrix(unlist(df), nrow=8, ncol=9, byrow=F))
-df18 <- df18[-1,]
-names(df18) <- c("age_group",
-                 "symptomatic_illness_estimate",
-                 "symptomatic_illness_ci",
-                 "med_visit_estimate",
-                 "med_visit_ci",
-                 "hosp_estimate",
-                 "hosp_ci",
-                 "death_estimate",
-                 "death_ci")
-df18 <- df18[-1,]
 
-df18 %>%
-  map_dfr(~gsub(",", "", .)) %>%
-  map_dfr(~gsub("\\(", "", .)) %>%
-  map_dfr(~gsub("\\)", "", .)) -> df18
-df18 %>%
-  separate(., col=symptomatic_illness_ci, into=c("symptomatic_illness_ci_lower", "symptomatic_illness_ci_upper")) %>%
-  separate(., col=med_visit_ci, into=c("med_visit_ci_lower", "med_visit_ci_upper")) %>%
-  separate(., col=hosp_ci, into=c("hosp_ci_lower", "hosp_ci_upper")) %>%
-  separate(., col=death_ci, into=c("death_ci_lower", "death_ci_upper")) -> df18
-df17$season <- "2018-2019"
 
 ###### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
 ## 2018-2019 Complete
 ###### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
-
-
-
-
+df1819 <- readxl::read_excel("/Users/timwiemken/Library/Mobile Documents/com~apple~CloudDocs/Work/Pfizer/flu_prevention/data/manual_flu.xlsx",
+                             sheet="2018-2019")
+names(df1819) <- c("age_group",
+               "symptomatic_illness_estimate",
+               "symptomatic_illness_ci",
+               "med_visit_estimate",
+               "med_visit_ci",
+               "hosp_estimate",
+               "hosp_ci",
+               "death_estimate",
+               "death_ci")
+df1819 %>%
+  separate(., col=symptomatic_illness_ci, into=c("symptomatic_illness_ci_lower", "symptomatic_illness_ci_upper")) %>%
+  separate(., col=med_visit_ci, into=c("med_visit_ci_lower", "med_visit_ci_upper")) %>%
+  separate(., col=hosp_ci, into=c("hosp_ci_lower", "hosp_ci_upper")) %>%
+  separate(., col=death_ci, into=c("death_ci_lower", "death_ci_upper")) -> df1819
+df1819$season <- "2018-2019"
 
 
 ###### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
 ## 2019-2020 Start
 ###### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
-
+df1920 <- readxl::read_excel("/Users/timwiemken/Library/Mobile Documents/com~apple~CloudDocs/Work/Pfizer/flu_prevention/data/manual_flu.xlsx",
+                             sheet="2019-2020")
+names(df1920) <- c("age_group",
+                   "symptomatic_illness_estimate",
+                   "symptomatic_illness_ci",
+                   "med_visit_estimate",
+                   "med_visit_ci",
+                   "hosp_estimate",
+                   "hosp_ci",
+                   "death_estimate",
+                   "death_ci")
+df1920 %>%
+  separate(., col=symptomatic_illness_ci, into=c("symptomatic_illness_ci_lower", "symptomatic_illness_ci_upper")) %>%
+  separate(., col=med_visit_ci, into=c("med_visit_ci_lower", "med_visit_ci_upper")) %>%
+  separate(., col=hosp_ci, into=c("hosp_ci_lower", "hosp_ci_upper")) %>%
+  separate(., col=death_ci, into=c("death_ci_lower", "death_ci_upper")) -> df1920
+df1920$season <- "2019-2020"
 
 ###### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
-## 22019-2020 Complete
+## 2019-2020 Complete
 ###### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
+
+
+
+##############################################################################
+### COMBINE
+##############################################################################
+df <- data.frame(rbind(test1, df1718, df1819, df1920))
+
+### vaccine uptake https://www.cdc.gov/flu/fluvaxview/coverage_1011estimates.htm
+write.table(df, "/Users/timwiemken/Library/Mobile Documents/com~apple~CloudDocs/Work/Pfizer/flu_prevention/app/burden.csv", na="", row.names=F)
+
